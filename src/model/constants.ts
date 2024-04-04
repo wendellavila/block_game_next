@@ -16,3 +16,17 @@ export const sleep = (ms: number) => new Promise<void>(
 export const readKey = () => new Promise<KeyboardEventInit>(
   (r) => window.addEventListener('keydown', r, {once: true})
 );
+
+export const waitKeyPress = (timeout : number) => new Promise<KeyboardEventInit>((resolve, reject) => {
+  // start timeout
+  const timeoutID = setTimeout(
+    () => reject('longCalculation took too long'),
+    timeout
+  );
+  
+  // start calculation
+  readKey().then(result => {
+    clearTimeout(timeoutID);
+    resolve(result);
+  });
+})

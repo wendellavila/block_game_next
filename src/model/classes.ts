@@ -1,5 +1,5 @@
 import { PlayfieldYX, YX } from "@/model/types";
-import { emptyPlayfield, playfieldWidth, playfieldHeight, readKey, sleep } from "./constants";
+import { emptyPlayfield, playfieldWidth, playfieldHeight, readKey, waitKeyPress } from "./constants";
 import { BlockLayout, Orientation } from "@/model/types";
 
 abstract class Block {
@@ -163,11 +163,13 @@ export class Game {
       this.addCurrentBlock();
       this.updatePlayfieldState();
       while(this.currentBlock.canMoveDown(this.playfield)){
-        //await this.getPlayerInput();
-        //await new Promise(() => this.getPlayerInput());
-        //await sleep(500);
-        const keyEvent = await readKey();
-        console.log('Pressed', keyEvent.key);
+        try{
+          const keyEvent = await waitKeyPress(this.speed);
+          console.log('Pressed', keyEvent.key);
+        }
+        catch (error) {
+          console.log(`No key pressed in ${this.speed} ms.`);
+        }
         this.updatePlayfieldState();
         this.removeCurrentBlock();
         this.currentBlock.moveDown();
