@@ -2,6 +2,7 @@ import { PlayfieldYX } from "@/model/types";
 
 export const playfieldWidth: number = 10;
 export const playfieldHeight: number = 20;
+export const layoutSize: number = 4;
 
 export const emptyPlayfield = Array.from(
   Array<number>(playfieldHeight),

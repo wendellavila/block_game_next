@@ -2,6 +2,8 @@ export type YX = [number, number];
 export type PlayfieldYX = Tuple<Tuple<string, 20>, 10>;
 export type BlockLayout = Tuple<Tuple<string, 4>, 4>;
 export type Orientation = 'up' | 'down' | 'left' | 'right';
+export type MovementDirection = 'left' | 'right' | 'down';
+export type RotationDirection = 'left' | 'right';
 
 type Tuple<
   T,

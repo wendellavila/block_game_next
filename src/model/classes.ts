@@ -1,12 +1,14 @@
 import { PlayfieldYX, YX } from "@/model/types";
-import { emptyPlayfield, playfieldWidth, playfieldHeight, readKey, waitKeyPress } from "./constants";
-import { BlockLayout, Orientation } from "@/model/types";
+import { emptyPlayfield, playfieldWidth, playfieldHeight, waitKeyPress,layoutSize } from "./constants";
+import { BlockLayout, Orientation,MovementDirection,RotationDirection } from "@/model/types";
 
 abstract class Block {
   layout: BlockLayout;
   orientation: Orientation = 'up';
-  anchorPosition: YX = [-3, Math.floor(playfieldWidth / 2) - 1];
-
+  anchorPosition: YX = [
+    -layoutSize+1,
+    Math.floor(playfieldWidth / 2) - 2
+  ]; // relative to playfield width and layout height
   constructor(layout: BlockLayout){
     this.layout = layout;
   }
@@ -18,24 +20,38 @@ abstract class Block {
     return this.anchorPosition[1];
   }
 
-  moveDown(){
-    this.anchorPosition = [this.y + 1, this.x];
-  }
-  moveLeft(){
-    this.anchorPosition = [this.y, this.x - 1];
-  }
-  moveRight(){
-    this.anchorPosition = [this.y, this.x + 1];
+  move(direction: MovementDirection){
+    if(direction === 'left'){
+      this.anchorPosition = [this.y, this.x - 1];
+    }
+    else if(direction === 'right'){
+      this.anchorPosition = [this.y, this.x + 1]
+    }
+    else {
+      this.anchorPosition = [this.y + 1, this.x]
+    }
   }
 
-  abstract canPlace(playfield: string[][]): boolean;
-  abstract canMoveDown(playfield: string[][]): boolean;
-  abstract canMoveLeft(playfield: string[][]): boolean;
-  abstract canMoveRight(playfield: string[][]): boolean;
-  abstract canRotateLeft(playfield: string[][]): boolean;
-  abstract canRotateRight(playfield: string[][]): boolean;
-  abstract rotateLeft(): void;
-  abstract rotateRight(): void;
+  canPlace(playfield: string[][]) : boolean {
+    //Start position of last row of layout
+    const layoutY = layoutSize-1;
+    const layoutX = 0;
+    //Start position of first row of playfield
+    const playfieldY = 0;
+    const playfieldX = Math.floor(playfieldWidth / 2) - 2;
+
+    for(let i = 0; i < layoutSize; i++){
+      const isLayoutPixelNotEmpty = this.layout[layoutY][layoutX+i] !== ' ';
+      const isPlayfieldPixelNotEmpty = playfield[playfieldY][playfieldX+i] !== ' ';
+      if(isLayoutPixelNotEmpty && isPlayfieldPixelNotEmpty){
+        return false;
+      }
+    }
+    return true;
+  }
+  abstract canMove(playfield: string[][], direction: MovementDirection): boolean;
+  abstract canRotate(playfield: string[][], direction: RotationDirection): boolean;
+  abstract rotate(direction: RotationDirection): void;
 }
 
 class Square extends Block {
@@ -49,42 +65,26 @@ class Square extends Block {
     super(layout);
   }
 
-  canPlace(playfield: string[][]) : boolean {
-    return playfield[this.y+3][this.x+1] === ' ' &&
-    playfield[this.y+3][this.x+1] === ' ';
-  }
-
-  canMoveDown(playfield: string[][]) : boolean {
-    const isNextRowClear = (playfield: string[][]) => {
-      if(this.y+4 > playfieldHeight - 1){
-        return false;
+  canMove(playfield: string[][], direction: MovementDirection) : boolean {
+    if(direction === 'down'){
+      const hasNextRow = this.y + 1 < playfieldHeight - 3;
+      const isNextRowClear = (playfield: string[][]) => {
+        if(this.y+4 > playfieldHeight - 1){
+          return false;
+        }
+        return playfield[this.y+4][this.x+1] === ' ' &&
+          playfield[this.y+4][this.x+1] === ' ';
+      };
+      if(hasNextRow && isNextRowClear(playfield)){
+        return true;
       }
-      return playfield[this.y+4][this.x+1] === ' ' &&
-        playfield[this.y+4][this.x+1] === ' ';
-    };
-
-    const isNextRowInsideLimits = this.y + 1 < playfieldHeight - 3;
-
-    if(isNextRowClear(playfield) && isNextRowInsideLimits){
-      return true;
     }
     return false;
   }
-  canMoveLeft(playfield: string[][]) : boolean {
-    return true;
-  }
-  canMoveRight(playfield: string[][]) : boolean {
-    return true;
-  }
-  canRotateLeft(playfield: string[][]) : boolean {
+  canRotate(playfield: string[][], direction: RotationDirection) : boolean {
     return false;
   }
-  canRotateRight(playfield: string[][]) : boolean {
-    return false;
-  }
-  rotateLeft() : void {
-  }
-  rotateRight() : void {
+  rotate(direction: RotationDirection) : void {
   }
 }
 
@@ -162,7 +162,7 @@ export class Game {
     while(this.currentBlock.canPlace(this.playfield)){
       this.addCurrentBlock();
       this.updatePlayfieldState();
-      while(this.currentBlock.canMoveDown(this.playfield)){
+      while(this.currentBlock.canMove(this.playfield, 'down')){
         try{
           const keyEvent = await waitKeyPress(this.speed);
           console.log('Pressed', keyEvent.key);
@@ -172,7 +172,7 @@ export class Game {
         }
         this.updatePlayfieldState();
         this.removeCurrentBlock();
-        this.currentBlock.moveDown();
+        this.currentBlock.move('down');
         this.addCurrentBlock();
         this.updatePlayfieldState();
       }
