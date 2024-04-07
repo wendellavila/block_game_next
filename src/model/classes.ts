@@ -59,7 +59,7 @@ abstract class Block {
     else if(direction === 'right'){
       this.position = {y: this.y, x: this.x+1};
     }
-    else {
+    else { // down
       this.position = {y: this.y + 1, x:this.x};
     }
   }
@@ -212,15 +212,8 @@ export class Game {
     this.setScoreCallback = setScoreCallback;
   }
 
-  addBlock(block: Block){
+  placeBlock(block: Block){
     this.playfield.setValues(block.grid, block.position);
-  }
-
-  removeBlock(block: Block){
-    this.playfield.setValues(
-      new Grid({width: block.width, height: block.height}),
-      block.position
-    );
   }
 
   tryMoveBlock(block: Block, direction: MovementDirection) : boolean {
@@ -243,7 +236,7 @@ export class Game {
     while(this.nextBlocks[0].canPlace()){
       const block: Block = this.nextBlocks.shift()!;
       this.nextBlocks.push(new Square(this.playfield));
-      this.addBlock(block);
+      this.placeBlock(block);
       
       let skip: boolean = false;
       let canMoveDown: boolean = true;
