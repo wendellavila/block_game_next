@@ -1,13 +1,15 @@
 import { PlayfieldYX } from "@/model/types";
 
-export const playfieldWidth: number = 10;
-export const playfieldHeight: number = 20;
+export const defaultPlayfieldSize = {
+  width: 10,
+  height: 20
+};
 export const layoutSize: number = 4;
 
-export const emptyPlayfield = Array.from(
-  Array<number>(playfieldHeight),
+export const emptyPlayfieldGrid = (width: number, height: number) => Array.from(
+  Array<number>(height),
   (_) => Array.from(
-    Array<number>(playfieldWidth), (_) => ' '
+    Array<number>(width), (_) => ' '
   )
 ) as PlayfieldYX;
 

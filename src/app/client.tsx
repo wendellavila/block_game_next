@@ -3,7 +3,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { PlayfieldYX } from "@/model/types";
 import { Game } from "@/model/classes";
 
-function PlayfieldGrid(props: { playfield?: PlayfieldYX }): ReactNode {
+function PlayfieldGrid(props: { playfield?: string[][] }): ReactNode {
   return (
     props.playfield &&
     <div id="playfield">
@@ -30,13 +30,13 @@ function PlayfieldGrid(props: { playfield?: PlayfieldYX }): ReactNode {
 }
 
 export default function GameArea(): ReactNode {
-  const [playfield, setPlayfield] = useState<PlayfieldYX | undefined>(undefined);
+  const [playfield, setPlayfield] = useState<string[][] | undefined>(undefined);
   const [score, setScore] = useState<number | undefined>(undefined);
   const game = new Game(setPlayfield, setScore);
 
   useEffect(()=>{
     const startGame = async() => {
-      await game.startGame();
+      await game.play();
     };
     startGame();
 

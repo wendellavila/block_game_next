@@ -1,183 +1,281 @@
-import { PlayfieldYX, YX } from "@/model/types";
-import { emptyPlayfield, playfieldWidth, playfieldHeight, waitKeyPress,layoutSize } from "./constants";
-import { BlockLayout, Orientation,MovementDirection,RotationDirection } from "@/model/types";
+import { YX } from "@/model/types";
+import { defaultPlayfieldSize, sleep, waitKeyPress } from "./constants";
+import { DirectionGrids,Orientation,MovementDirection,RotationDirection } from "@/model/types";
 
 abstract class Block {
-  layout: BlockLayout;
+  grids: DirectionGrids;
   orientation: Orientation = 'up';
-  anchorPosition: YX = [
-    -layoutSize+1,
-    Math.floor(playfieldWidth / 2) - 2
-  ]; // relative to playfield width and layout height
-  constructor(layout: BlockLayout){
-    this.layout = layout;
+  position: YX; // relative to playfield width and layout height
+  playfield: Grid;
+  constructor(layouts: DirectionGrids, playfield: Grid){
+    this.grids = layouts;
+    this.playfield = playfield;
+    this.position = {
+      y: -this.height+1,
+      x: Math.floor(playfield.width/2)-this.width+1
+    }
   }
 
+  getYX(y: number, x: number) : string {
+    return this.grid.getYX(y, x);
+  }
+
+  get grid(){
+    return this.grids[this.orientation];
+  }
+  get height(){
+    return this.grid.height;
+  }
+  get width(){
+    return this.grid.width;
+  }
   get y(){
-    return this.anchorPosition[0];
+    return this.position.y;
   }
   get x(){
-    return this.anchorPosition[1];
+    return this.position.x;
   }
 
-  move(direction: MovementDirection){
-    if(direction === 'left'){
-      this.anchorPosition = [this.y, this.x - 1];
-    }
-    else if(direction === 'right'){
-      this.anchorPosition = [this.y, this.x + 1]
-    }
-    else {
-      this.anchorPosition = [this.y + 1, this.x]
-    }
-  }
+  canPlace() : boolean {
+    // Start position of last row of layout
+    const layoutY = this.height-1;
+    // Start position of first row of playfield
+    const playfieldX = Math.floor(this.playfield.width/2)-this.width+1
 
-  canPlace(playfield: string[][]) : boolean {
-    //Start position of last row of layout
-    const layoutY = layoutSize-1;
-    const layoutX = 0;
-    //Start position of first row of playfield
-    const playfieldY = 0;
-    const playfieldX = Math.floor(playfieldWidth / 2) - 2;
-
-    for(let i = 0; i < layoutSize; i++){
-      const isLayoutPixelNotEmpty = this.layout[layoutY][layoutX+i] !== ' ';
-      const isPlayfieldPixelNotEmpty = playfield[playfieldY][playfieldX+i] !== ' ';
+    for(let i = 0; i < this.width; i++){
+      const isLayoutPixelNotEmpty = this.getYX(layoutY,i) !== ' ';
+      const isPlayfieldPixelNotEmpty = this.playfield.getYX(0,playfieldX+i) !== ' ';
       if(isLayoutPixelNotEmpty && isPlayfieldPixelNotEmpty){
         return false;
       }
     }
     return true;
   }
-  abstract canMove(playfield: string[][], direction: MovementDirection): boolean;
-  abstract canRotate(playfield: string[][], direction: RotationDirection): boolean;
+
+  move(direction: MovementDirection){
+    if(direction === 'left'){
+      this.position = {y: this.y, x: this.x-1};
+    }
+    else if(direction === 'right'){
+      this.position = {y: this.y, x: this.x+1};
+    }
+    else {
+      this.position = {y: this.y + 1, x:this.x};
+    }
+  }
+
+  /**
+   * Simulates a move and checks if there's overlap after the move
+   * @param {MovementDirection} direction - left, right, or down.
+   * @returns - Succes status
+   */
+  tryMove(direction: MovementDirection) : boolean {
+    let tempPosition: YX;
+    if(direction === 'down'){
+      const hasNextRow: boolean = this.y + this.height < this.playfield.height;
+      if(!hasNextRow) return false;
+      tempPosition = {y: this.position.y+1, x: this.position.x};
+    }
+    else if(direction === 'left'){
+      const hasPrevCol: boolean = this.x - 1 >= 0;
+      if(!hasPrevCol) return false;
+      tempPosition = {y: this.position.y, x: this.position.x-1};
+    }
+    else { // right
+      const hasNextCol: boolean = this.x + this.width < this.playfield.width;
+      if(!hasNextCol) return false;
+      tempPosition = {y: this.position.y, x: this.position.x+1};
+    }
+
+    let tempPlayfield: Grid = new Grid({values: structuredClone(this.playfield.values)});
+    //Remove current block from playfield
+    tempPlayfield.setValues(
+      new Grid({width: this.width, height: this.height}),
+      this.position
+    );
+    //Check if block overlaps filled positions of playfield after move
+
+    const yStart = Math.max(tempPosition.y, 0);
+    const yEnd = Math.min(tempPosition.y+this.height, this.playfield.height);
+
+    const xStart = Math.max(tempPosition.x, 0);
+    const xEnd = Math.min(tempPosition.x+this.width, this.playfield.width);
+
+    for(let y = yStart; y < yEnd; y++){
+      for(let x = xStart; x < xEnd; x++){
+        const playfieldPixel = tempPlayfield.getYX(
+          y, x
+        );
+        if(playfieldPixel !== ' '){
+          return false;
+        }
+      }
+    }
+    tempPlayfield.setValues(this.grid, tempPosition);
+    this.position = tempPosition;
+    this.playfield.setValues(tempPlayfield, {y: 0, x: 0});
+    
+    return true;
+  }
   abstract rotate(direction: RotationDirection): void;
+  abstract canRotate(direction: RotationDirection): boolean;
 }
 
 class Square extends Block {
-  constructor(){
-    const layout: BlockLayout = [
-      [' ',' ',' ',' '],
-      [' ',' ',' ',' '],
-      [' ','#','#',' '],
-      [' ','#','#',' ']
-    ];
-    super(layout);
-  }
-
-  canMove(playfield: string[][], direction: MovementDirection) : boolean {
-    if(direction === 'down'){
-      const hasNextRow = this.y + 1 < playfieldHeight - 3;
-      const isNextRowClear = (playfield: string[][]) => {
-        if(this.y+4 > playfieldHeight - 1){
-          return false;
-        }
-        return playfield[this.y+4][this.x+1] === ' ' &&
-          playfield[this.y+4][this.x+1] === ' ';
-      };
-      if(hasNextRow && isNextRowClear(playfield)){
-        return true;
-      }
+  constructor(playfield: Grid){
+    const layout: Grid = new Grid({values: [
+      ['#','#'],
+      ['#','#']
+    ]});
+    const layouts = {
+      up: layout,
+      left: layout,
+      right: layout,
+      down: layout,
     }
-    return false;
+    super(layouts, playfield);
   }
-  canRotate(playfield: string[][], direction: RotationDirection) : boolean {
+  canRotate(direction: RotationDirection) : boolean {
     return false;
   }
   rotate(direction: RotationDirection) : void {
   }
 }
 
+export class Grid {
+  values: string[][];
+
+  constructor(args: {width?: number, height?: number, values?: string[][]}){
+    if(args.values){
+      this.values = args.values;
+    }
+    else {
+      this.values = Array.from(
+        Array<number>(args.height ?? defaultPlayfieldSize.height),
+        (_) => Array.from(
+          Array<number>(args.width ?? defaultPlayfieldSize.width), (_) => ' '
+        )
+      )
+    }
+  }
+
+  getYX(y: number, x: number) : string {
+    return this.values[y][x];
+  }
+
+  setYX(y: number, x: number, value: string) : void {
+    this.values[y][x] = value;
+  }
+
+  get width(){
+    return this.values[0] ? this.values[0].length : 0;
+  }
+
+  get height(){
+    return this.values.length;
+  }
+
+  setValues(values: Grid, startPosition: YX) : void {
+    const yStart = Math.max(startPosition.y, 0);
+    const yEnd = Math.min(startPosition.y+values.height, this.height);
+
+    const xStart = Math.max(startPosition.x, 0);
+    const xEnd = Math.min(startPosition.x+values.width, this.width);
+
+    for(let y = yStart; y < yEnd; y++){
+      for(let x = xStart; x < xEnd; x++){
+        this.values[y][x] = values.getYX(y-startPosition.y,x-startPosition.x);
+      }
+    }
+  }
+}
+
 export class Game {
-  playfield: PlayfieldYX;
+  playfield: Grid;
   score: number;
   speed: number;
-  nextBlocks: [Block, Block, Block] | [Block, Block];
-  currentBlock: Block;
-  setPlayfieldCallback: React.Dispatch<React.SetStateAction<PlayfieldYX|undefined>>;
+  nextBlocks: Block[];
+  setPlayfieldCallback: React.Dispatch<React.SetStateAction<string[][]|undefined>>;
   setScoreCallback: React.Dispatch<React.SetStateAction<number|undefined>>;
 
   constructor(
-    setPlayfieldCallback: React.Dispatch<React.SetStateAction<PlayfieldYX|undefined>>,
-    setScoreCallback: React.Dispatch<React.SetStateAction<number|undefined>>
+    setPlayfieldCallback: React.Dispatch<React.SetStateAction<string[][]|undefined>>,
+    setScoreCallback: React.Dispatch<React.SetStateAction<number|undefined>>,
+    playfieldWidth?: number,
+    playfieldHeight?: number
     ) {
-    this.playfield = emptyPlayfield;
+    this.playfield = new Grid({width: playfieldWidth, height: playfieldHeight});
     this.score = 0;
     this.speed = 1000;
-    this.currentBlock = new Square;
-    this.nextBlocks = [new Square, new Square, new Square];
+    this.nextBlocks = new Array(3).fill(new Square(this.playfield));
     this.setPlayfieldCallback = setPlayfieldCallback;
     this.setScoreCallback = setScoreCallback;
   }
 
-  addCurrentBlock(){
-    const anchorY = this.currentBlock.y;
-    const anchorX = this.currentBlock.x;
-
-    const yStart = anchorY > 0 ? 0 : 0 - anchorY;
-
-    for(let y = yStart; y < 4; y++){
-      for(let x = 0; x < 4; x++){
-        this.playfield[anchorY+y][anchorX+x] = this.currentBlock.layout[y][x];
-      }
-    }
+  addBlock(block: Block){
+    this.playfield.setValues(block.grid, block.position);
   }
-  removeCurrentBlock(){
-    const anchorY = this.currentBlock.y;
-    const anchorX = this.currentBlock.x;
 
-    const yStart = anchorY > 0 ? 0 : 0 - anchorY;
+  removeBlock(block: Block){
+    this.playfield.setValues(
+      new Grid({width: block.width, height: block.height}),
+      block.position
+    );
+  }
 
-    for(let y = yStart; y < 4; y++){
-      for(let x = 0; x < 4; x++){
-        this.playfield[anchorY+y][anchorX+x] = ' ';
-      }
-    }
+  tryMoveBlock(block: Block, direction: MovementDirection) : boolean {
+    const moveSuccessful = block.tryMove(direction);
+    if(moveSuccessful) this.updatePlayfieldState();
+    return moveSuccessful;
   }
 
   updatePlayfieldState() : void {
-    this.setPlayfieldCallback(() => structuredClone(this.playfield));
+    this.setPlayfieldCallback(() => structuredClone(this.playfield.values));
   }
 
   updateScoreState() : void {
     this.setScoreCallback(this.score);
   }
 
-  getPlayerInput() : void {
-    const startDate = new Date().getTime();
-    let newDate = new Date().getTime();
-
-    let stopped = false;
-    while(!stopped){
-      newDate = new Date().getTime();
-      const diff = newDate - startDate;
-      console.log(diff > 500);
-      if(diff > 500){
-        stopped = true;
+  async play() : Promise<void> {
+    this.updatePlayfieldState();
+    await sleep(200);
+    while(this.nextBlocks[0].canPlace()){
+      const block: Block = this.nextBlocks.shift()!;
+      this.nextBlocks.push(new Square(this.playfield));
+      this.addBlock(block);
+      
+      let skip: boolean = false;
+      let canMoveDown: boolean = true;
+      while(canMoveDown){
+        this.updatePlayfieldState();
+        if(!skip){
+          const startTime: number = Date.now();
+          let endTime: number = startTime;
+          while(endTime - startTime < this.speed){
+            try{
+              const key = (await waitKeyPress(this.speed)).key;
+              if(key === 'ArrowDown' || key === 's' || key === 'Enter'){
+                skip = true;
+                break;
+              }
+              else if(key === 'ArrowLeft' || key ===  'a'){
+                this.tryMoveBlock(block, 'left');
+              }
+              else if(key === 'ArrowRight' || key ===  'd'){
+                this.tryMoveBlock(block, 'right');
+              }
+            }
+            catch (_){}; // Input reading timeout
+            endTime = Date.now();
+          }
+        }
+        else {
+          await sleep(12);
+        }
+        canMoveDown = this.tryMoveBlock(block, 'down');
       }
     }
-  }
-
-  async startGame() : Promise<void> {
-    while(this.currentBlock.canPlace(this.playfield)){
-      this.addCurrentBlock();
-      this.updatePlayfieldState();
-      while(this.currentBlock.canMove(this.playfield, 'down')){
-        try{
-          const keyEvent = await waitKeyPress(this.speed);
-          console.log('Pressed', keyEvent.key);
-        }
-        catch (error) {
-          console.log(`No key pressed in ${this.speed} ms.`);
-        }
-        this.updatePlayfieldState();
-        this.removeCurrentBlock();
-        this.currentBlock.move('down');
-        this.addCurrentBlock();
-        this.updatePlayfieldState();
-      }
-      this.currentBlock = this.nextBlocks.shift()!;
-      this.nextBlocks.push(new Square);
-    }
+    // Game Over
   }
 }
