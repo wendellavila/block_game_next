@@ -153,6 +153,10 @@ export class Grid {
     return this.values[position.y][position.x];
   }
 
+  getRow(y: number) : string[] {
+    return this.values[y];
+  }
+
   get width(){
     return this.values[0] ? this.values[0].length : 0;
   }
@@ -182,7 +186,7 @@ export class Grid {
 export class Game {
   private playfield: Grid;
   private score: number;
-  private speed: number;
+  private rowsCleared: number;
   private nextBlocks: Block[];
   private setPlayfieldCallback: React.Dispatch<React.SetStateAction<string[][]|undefined>>;
   private setScoreCallback: React.Dispatch<React.SetStateAction<number|undefined>>;
@@ -195,10 +199,60 @@ export class Game {
     ) {
     this.playfield = new Grid({width: playfieldWidth, height: playfieldHeight});
     this.score = 0;
-    this.speed = 1000;
+    this.rowsCleared = 0;
     this.nextBlocks = new Array(3).fill(new Square(this.playfield));
     this.setPlayfieldCallback = setPlayfieldCallback;
     this.setScoreCallback = setScoreCallback;
+  }
+
+  get speed() : number {
+    const minSpeed = 50;
+    return Math.max(minSpeed, 1000 - (this.level-1 * minSpeed));
+  }
+
+  get level() : number {
+    return this.rowsCleared / 10 + 1;
+  }
+  /**
+   * Clear all completely filled rows, one at a time, and updates score and speed accordingly.
+   */
+  private clearRows(){
+    let rowsCleared = 0;
+    for(let y = this.playfield.height - 1; y >= 0; y--){
+      let repeat = false;
+      do {
+        let emptyCount = 0;
+        for(let x = 0; x < this.playfield.width; x++){
+          if(this.playfield.getXY({y, x}) === ' ') emptyCount++;
+        }
+        if(emptyCount === 0){
+          // Move each row one row below
+          for(let y2 = y; y2 >= 1; y2--){
+            this.playfield.setValues(
+              new Grid({values: [this.playfield.getRow(y2-1)]}),
+              {y: y2, x: 0}
+            );
+          }
+          // Clear first row
+          this.playfield.setValues(
+            new Grid({width: this.playfield.width, height: 1}),
+            {y: 0, x: 0}
+          );
+          rowsCleared++;
+          // If rows were moved, current position is now a different row
+          // running again for current position before proceeding to next
+          repeat = true;
+        }
+        else {
+          repeat = false;
+        }
+      } while(repeat);
+    }
+    if(rowsCleared > 0){
+      this.score += 40 * rowsCleared * this.level;
+      this.rowsCleared += rowsCleared;
+      this.updateScoreState();
+    }
   }
 
   private placeBlock(block: Block){
@@ -257,6 +311,7 @@ export class Game {
         }
         canMoveDown = this.tryMoveBlock(block, 'down');
       }
+      this.clearRows();
     }
     // Game Over
   }
