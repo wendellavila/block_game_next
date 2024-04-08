@@ -206,13 +206,16 @@ export class Game {
   }
 
   get speed() : number {
-    const minSpeed = 50;
-    return Math.max(minSpeed, 1000 - (this.level-1 * minSpeed));
+    const maxSpeed = 1000; // ms
+    const minSpeed = 50;   // ms
+    // Decreases 50 ms each level
+    return Math.max(minSpeed, maxSpeed - (this.level-1 * minSpeed));
   }
 
   get level() : number {
-    return this.rowsCleared / 10 + 1;
+    return Math.floor(this.rowsCleared / 10) + 1;
   }
+  
   /**
    * Clear all completely filled rows, one at a time, and updates score and speed accordingly.
    */
@@ -249,6 +252,7 @@ export class Game {
       } while(repeat);
     }
     if(rowsCleared > 0){
+      // Score increase is bigger for multiple rows and on higher levels
       this.score += 40 * rowsCleared * this.level;
       this.rowsCleared += rowsCleared;
       this.updateScoreState();
