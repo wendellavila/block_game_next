@@ -1,6 +1,6 @@
 import { Grid } from '@/model/classes';
 
-export type YX = {y: number, x: number};
+export type XY = {x: number, y: number};
 export type PlayfieldYX = Tuple<Tuple<string, 20>, 10>;
 export type DirectionGrids = {
   'up': Grid,

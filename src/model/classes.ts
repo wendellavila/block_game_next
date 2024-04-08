@@ -1,27 +1,27 @@
-import { YX } from "@/model/types";
+import { XY } from "@/model/types";
 import { defaultPlayfieldSize, sleep, waitKeyPress } from "./constants";
 import { DirectionGrids,Orientation,MovementDirection,RotationDirection } from "@/model/types";
 
 abstract class Block {
-  grids: DirectionGrids;
-  orientation: Orientation = 'up';
-  position: YX; // relative to playfield width and layout height
+  private directionGrids: DirectionGrids;
+  private orientation: Orientation = 'up';
+  position: XY; // relative to playfield width and layout height
   playfield: Grid;
   constructor(layouts: DirectionGrids, playfield: Grid){
-    this.grids = layouts;
+    this.directionGrids = layouts;
     this.playfield = playfield;
     this.position = {
-      y: -this.height+1,
-      x: Math.floor(playfield.width/2)-this.width+1
+      x: Math.floor(playfield.width/2)-this.width+1,
+      y: -this.height+1
     }
   }
 
-  getYX(y: number, x: number) : string {
-    return this.grid.getYX(y, x);
+  getXY(position: XY) : string {
+    return this.grid.getXY({x: position.x, y: position.y});
   }
 
   get grid(){
-    return this.grids[this.orientation];
+    return this.directionGrids[this.orientation];
   }
   get height(){
     return this.grid.height;
@@ -36,6 +36,10 @@ abstract class Block {
     return this.position.x;
   }
 
+  /**
+   * Checks if block can be placed in the first row of playfield
+   * @returns {boolean} Placement status
+   */
   canPlace() : boolean {
     // Start position of last row of layout
     const layoutY = this.height-1;
@@ -43,8 +47,8 @@ abstract class Block {
     const playfieldX = Math.floor(this.playfield.width/2)-this.width+1
 
     for(let i = 0; i < this.width; i++){
-      const isLayoutPixelNotEmpty = this.getYX(layoutY,i) !== ' ';
-      const isPlayfieldPixelNotEmpty = this.playfield.getYX(0,playfieldX+i) !== ' ';
+      const isLayoutPixelNotEmpty = this.getXY({x: i, y: layoutY}) !== ' ';
+      const isPlayfieldPixelNotEmpty = this.playfield.getXY({x: playfieldX+i, y: 0}) !== ' ';
       if(isLayoutPixelNotEmpty && isPlayfieldPixelNotEmpty){
         return false;
       }
@@ -52,25 +56,13 @@ abstract class Block {
     return true;
   }
 
-  move(direction: MovementDirection){
-    if(direction === 'left'){
-      this.position = {y: this.y, x: this.x-1};
-    }
-    else if(direction === 'right'){
-      this.position = {y: this.y, x: this.x+1};
-    }
-    else { // down
-      this.position = {y: this.y + 1, x:this.x};
-    }
-  }
-
   /**
    * Simulates a move and checks if there's overlap after the move
    * @param {MovementDirection} direction - left, right, or down.
-   * @returns - Succes status
+   * @returns {boolean} Success status
    */
   tryMove(direction: MovementDirection) : boolean {
-    let tempPosition: YX;
+    let tempPosition: XY;
     if(direction === 'down'){
       const hasNextRow: boolean = this.y + this.height < this.playfield.height;
       if(!hasNextRow) return false;
@@ -103,9 +95,7 @@ abstract class Block {
 
     for(let y = yStart; y < yEnd; y++){
       for(let x = xStart; x < xEnd; x++){
-        const playfieldPixel = tempPlayfield.getYX(
-          y, x
-        );
+        const playfieldPixel = tempPlayfield.getXY({x,y});
         if(playfieldPixel !== ' '){
           return false;
         }
@@ -117,8 +107,9 @@ abstract class Block {
     
     return true;
   }
-  abstract rotate(direction: RotationDirection): void;
-  abstract canRotate(direction: RotationDirection): boolean;
+  tryRotate(direction: RotationDirection): boolean {
+    return false;
+  };
 }
 
 class Square extends Block {
@@ -135,10 +126,9 @@ class Square extends Block {
     }
     super(layouts, playfield);
   }
-  canRotate(direction: RotationDirection) : boolean {
+  tryRotate(direction: RotationDirection) : boolean {
+    super.tryRotate(direction);
     return false;
-  }
-  rotate(direction: RotationDirection) : void {
   }
 }
 
@@ -159,12 +149,8 @@ export class Grid {
     }
   }
 
-  getYX(y: number, x: number) : string {
-    return this.values[y][x];
-  }
-
-  setYX(y: number, x: number, value: string) : void {
-    this.values[y][x] = value;
+  getXY(position: XY) : string {
+    return this.values[position.y][position.x];
   }
 
   get width(){
@@ -175,7 +161,7 @@ export class Grid {
     return this.values.length;
   }
 
-  setValues(values: Grid, startPosition: YX) : void {
+  setValues(values: Grid, startPosition: XY) : void {
     const yStart = Math.max(startPosition.y, 0);
     const yEnd = Math.min(startPosition.y+values.height, this.height);
 
@@ -184,19 +170,22 @@ export class Grid {
 
     for(let y = yStart; y < yEnd; y++){
       for(let x = xStart; x < xEnd; x++){
-        this.values[y][x] = values.getYX(y-startPosition.y,x-startPosition.x);
+        this.values[y][x] = values.getXY({
+          x: x-startPosition.x,
+          y: y-startPosition.y
+        });
       }
     }
   }
 }
 
 export class Game {
-  playfield: Grid;
-  score: number;
-  speed: number;
-  nextBlocks: Block[];
-  setPlayfieldCallback: React.Dispatch<React.SetStateAction<string[][]|undefined>>;
-  setScoreCallback: React.Dispatch<React.SetStateAction<number|undefined>>;
+  private playfield: Grid;
+  private score: number;
+  private speed: number;
+  private nextBlocks: Block[];
+  private setPlayfieldCallback: React.Dispatch<React.SetStateAction<string[][]|undefined>>;
+  private setScoreCallback: React.Dispatch<React.SetStateAction<number|undefined>>;
 
   constructor(
     setPlayfieldCallback: React.Dispatch<React.SetStateAction<string[][]|undefined>>,
@@ -212,21 +201,21 @@ export class Game {
     this.setScoreCallback = setScoreCallback;
   }
 
-  placeBlock(block: Block){
+  private placeBlock(block: Block){
     this.playfield.setValues(block.grid, block.position);
   }
 
-  tryMoveBlock(block: Block, direction: MovementDirection) : boolean {
+  private tryMoveBlock(block: Block, direction: MovementDirection) : boolean {
     const moveSuccessful = block.tryMove(direction);
     if(moveSuccessful) this.updatePlayfieldState();
     return moveSuccessful;
   }
 
-  updatePlayfieldState() : void {
+  private updatePlayfieldState() : void {
     this.setPlayfieldCallback(() => structuredClone(this.playfield.values));
   }
 
-  updateScoreState() : void {
+  private updateScoreState() : void {
     this.setScoreCallback(this.score);
   }
 

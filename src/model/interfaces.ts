@@ -1,9 +1,9 @@
-import { BlockLayout, Orientation, YX } from "@/model/types";
+import { BlockLayout, Orientation, XY } from "@/model/types";
 
 export interface Block {
   layout: BlockLayout;
   orientation: Orientation;
-  anchorPosition: YX;
+  anchorPosition: XY;
   canPlace: (playfield: string[][]) => boolean;
   canMoveDown: (playfield: string[][]) => boolean;
   canMoveLeft: (playfield: string[][]) => boolean;
