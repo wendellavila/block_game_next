@@ -1,15 +1,31 @@
 import { XY } from "@/model/types";
 import { defaultPlayfieldSize, sleep, waitKeyPress } from "./constants";
-import { DirectionGrids,Orientation,MovementDirection,RotationDirection } from "@/model/types";
+import { 
+  BlockActionType,
+  OrientationGrids,OrientationGridsAll,OrientationGridsOnly,OrientationGridsTwo,
+  Orientation,OrientationAll,OrientationTwo,OrientationOnly,
+  MovementDirection,RotationDirection
+} from "@/model/types";
 
 abstract class Block {
-  private directionGrids: DirectionGrids;
-  private orientation: Orientation = 'up';
+  protected orientationGrids: OrientationGrids;
+  protected orientation: Orientation;
   position: XY; // relative to playfield width and layout height
   playfield: Grid;
-  constructor(layouts: DirectionGrids, playfield: Grid){
-    this.directionGrids = layouts;
+  constructor(layouts: OrientationGrids, playfield: Grid){
+    this.orientationGrids = layouts;
     this.playfield = playfield;
+
+    if('only' in this.orientationGrids){
+      this.orientation = 'only' as OrientationOnly;
+    }
+    else if('upward' in this.orientationGrids){
+      this.orientation = 'upward' as OrientationTwo;
+    }
+    else {
+      this.orientation = 'up' as OrientationAll;
+    }
+
     this.position = {
       x: Math.floor(playfield.width/2)-this.width+1,
       y: -this.height+1
@@ -20,19 +36,27 @@ abstract class Block {
     return this.grid.getXY({x: position.x, y: position.y});
   }
 
-  get grid(){
-    return this.directionGrids[this.orientation];
+  get grid() : Grid {
+    if('only' in this.orientationGrids){
+      return this.orientationGrids['only'];
+    }
+    else if('upward' in this.orientationGrids){
+      return this.orientationGrids[this.orientation as OrientationTwo];
+    }
+    else {
+      return this.orientationGrids[this.orientation as OrientationAll];
+    }
   }
-  get height(){
+  get height() : number {
     return this.grid.height;
   }
-  get width(){
+  get width() : number {
     return this.grid.width;
   }
-  get y(){
+  get y() : number {
     return this.position.y;
   }
-  get x(){
+  get x() : number {
     return this.position.x;
   }
 
@@ -85,14 +109,12 @@ abstract class Block {
       new Grid({width: this.width, height: this.height}),
       this.position
     );
-    //Check if block overlaps filled positions of playfield after move
 
+    //Check if block overlaps filled positions of playfield after move
     const yStart = Math.max(tempPosition.y, 0);
     const yEnd = Math.min(tempPosition.y+this.height, this.playfield.height);
-
     const xStart = Math.max(tempPosition.x, 0);
     const xEnd = Math.min(tempPosition.x+this.width, this.playfield.width);
-
     for(let y = yStart; y < yEnd; y++){
       for(let x = xStart; x < xEnd; x++){
         const playfieldPixel = tempPlayfield.getXY({x,y});
@@ -101,15 +123,91 @@ abstract class Block {
         }
       }
     }
+    //Commits move
     tempPlayfield.setValues(this.grid, tempPosition);
     this.position = tempPosition;
     this.playfield.setValues(tempPlayfield, {y: 0, x: 0});
-    
     return true;
   }
-  tryRotate(direction: RotationDirection): boolean {
-    return false;
+  abstract tryRotate(direction: RotationDirection): boolean;
+
+  tryRotateAll(direction: RotationDirection): boolean {
+    if(!('up' in this.orientationGrids)){
+      return false;
+    }
+    let tempOrientation: OrientationAll;
+    let tempPosition: XY = {y: this.position.y, x: this.position.x};
+    if(direction === 'right'){
+      if(this.orientation === 'up'){
+        tempOrientation = 'right';
+        tempPosition = {y: tempPosition.y, x: tempPosition.x+1};
+      }
+      else if(this.orientation === 'right'){
+        tempOrientation = 'down';
+        tempPosition = {y: tempPosition.y-2, x: tempPosition.x-1};
+      }
+      else if(this.orientation === 'down'){
+        tempOrientation = 'left';
+        tempPosition = {y: tempPosition.y+2, x: tempPosition.x};
+      }
+      else {
+        tempOrientation = 'up';
+        tempPosition = {y: tempPosition.y, x: tempPosition.x};
+      }
+    }
+    else {
+      if(this.orientation === 'up'){
+        tempOrientation = 'left';
+        tempPosition = {y: tempPosition.y, x: tempPosition.x};
+      }
+      else if(this.orientation === 'left'){
+        tempOrientation = 'down';
+        tempPosition = {y: tempPosition.y+2, x: tempPosition.x};
+      }
+      else if(this.orientation === 'down'){
+        tempOrientation = 'right';
+        tempPosition = {y: tempPosition.y-2, x: tempPosition.x+1};
+      }
+      else {
+        tempOrientation = 'up';
+        tempPosition = {y: tempPosition.y, x: tempPosition.x-1};
+      }
+    }
+
+    if(tempPosition.y < 0) tempPosition.y = 0;
+    else if(tempPosition.y > this.height-1) tempPosition.y = this.height-1;
+    if(tempPosition.x < 0) tempPosition.x = 0;
+    else if(tempPosition.x > this.width-1) tempPosition.x = this.width-1;
+    
+    let tempPlayfield: Grid = new Grid({values: structuredClone(this.playfield.values)});
+    //Remove current block from playfield
+    tempPlayfield.setValues(
+      new Grid({width: this.width, height: this.height}),
+      this.position
+    );
+    const tempBlockGrid = this.orientationGrids[tempOrientation];
+
+    //Check if block overlaps filled positions of playfield after move
+    const yStart = Math.max(tempPosition.y, 0);
+    const yEnd = Math.min(tempPosition.y+tempBlockGrid.height, tempPlayfield.height);
+    const xStart = Math.max(tempPosition.x, 0);
+    const xEnd = Math.min(tempPosition.x+tempBlockGrid.width, tempPlayfield.width);
+    for(let y = yStart; y < yEnd; y++){
+      for(let x = xStart; x < xEnd; x++){
+        const playfieldPixel = tempPlayfield.getXY({x,y});
+        if(playfieldPixel !== ' '){
+          return false;
+        }
+      }
+    }
+    //Commits rotation
+    tempPlayfield.setValues(tempBlockGrid, tempPosition);
+    this.position = tempPosition;
+    this.playfield.setValues(tempPlayfield, {y: 0, x: 0});
+    this.orientation = tempOrientation;
+    return true;
   };
+
 }
 
 class Square extends Block {
@@ -118,17 +216,48 @@ class Square extends Block {
       ['#','#'],
       ['#','#']
     ]});
-    const layouts = {
-      up: layout,
-      left: layout,
-      right: layout,
-      down: layout,
+    const layouts: OrientationGridsOnly = {
+      only: layout
+    }
+    super(layouts, playfield);
+  }
+  tryRotate(_: RotationDirection) : boolean {
+    return false;
+  }
+}
+
+class T extends Block {
+  constructor(playfield: Grid){
+    const layoutUp: Grid = new Grid({values: [
+      ['T','T','T'],
+      [' ','T',' ']
+    ]});
+    const layoutDown: Grid = new Grid({values: [
+      [' ','T',' '],
+      ['T','T','T']
+    ]});
+    const layoutLeft: Grid = new Grid({values: [
+      ['T',' '],
+      ['T','T'],
+      ['T',' ']
+    ]});
+
+    const layoutRight: Grid = new Grid({values: [
+      [' ','T'],
+      ['T','T'],
+      [' ','T']
+    ]});
+
+    const layouts: OrientationGridsAll = {
+      up: layoutUp,
+      left: layoutLeft,
+      right: layoutRight,
+      down: layoutDown,
     }
     super(layouts, playfield);
   }
   tryRotate(direction: RotationDirection) : boolean {
-    super.tryRotate(direction);
-    return false;
+    return this.tryRotateAll(direction);
   }
 }
 
@@ -200,7 +329,7 @@ export class Game {
     this.playfield = new Grid({width: playfieldWidth, height: playfieldHeight});
     this.score = 0;
     this.rowsCleared = 0;
-    this.nextBlocks = new Array(3).fill(new Square(this.playfield));
+    this.nextBlocks = new Array(3).fill(this.getRandomBlock());
     this.setPlayfieldCallback = setPlayfieldCallback;
     this.setScoreCallback = setScoreCallback;
   }
@@ -219,7 +348,7 @@ export class Game {
   /**
    * Clear all completely filled rows, one at a time, and updates score and speed accordingly.
    */
-  private clearRows(){
+  private clearRows() : void {
     let rowsCleared = 0;
     for(let y = this.playfield.height - 1; y >= 0; y--){
       let repeat = false;
@@ -259,12 +388,35 @@ export class Game {
     }
   }
 
-  private placeBlock(block: Block){
+  private placeBlock(block: Block) : void {
     this.playfield.setValues(block.grid, block.position);
   }
 
-  private tryMoveBlock(block: Block, direction: MovementDirection) : boolean {
-    const moveSuccessful = block.tryMove(direction);
+  private getRandomBlock() : Block {
+    const blocks = [
+      new Square(this.playfield),
+      new T(this.playfield),
+    ];
+
+    const min = 0;
+    const max = blocks.length;
+    const randomIndex = Math.floor(Math.random() * (max - min) + min);
+    return blocks[randomIndex];
+  }
+
+  private tryBlockAction(
+    block: Block,
+    type: BlockActionType,
+    direction?: MovementDirection | RotationDirection
+  ) : boolean {
+    let moveSuccessful: boolean = false;
+
+    if(type === 'rotation' && direction && direction !== 'down'){
+      moveSuccessful = block.tryRotate(direction);
+    }
+    else if(type === 'movement' && direction) {
+      moveSuccessful = block.tryMove(direction);
+    }
     if(moveSuccessful) this.updatePlayfieldState();
     return moveSuccessful;
   }
@@ -282,7 +434,7 @@ export class Game {
     await sleep(200);
     while(this.nextBlocks[0].canPlace()){
       const block: Block = this.nextBlocks.shift()!;
-      this.nextBlocks.push(new Square(this.playfield));
+      this.nextBlocks.push(this.getRandomBlock());
       this.placeBlock(block);
       
       let skip: boolean = false;
@@ -294,16 +446,22 @@ export class Game {
           let endTime: number = startTime;
           while(endTime - startTime < this.speed){
             try{
-              const key = (await waitKeyPress(this.speed)).key;
-              if(key === 'ArrowDown' || key === 's' || key === 'Enter'){
+              const key = (await waitKeyPress(this.speed)).key!;
+              if(['ArrowDown','s','S','Enter'].includes(key)){
                 skip = true;
                 break;
               }
-              else if(key === 'ArrowLeft' || key ===  'a'){
-                this.tryMoveBlock(block, 'left');
+              else if(['ArrowLeft','a','A'].includes(key)){
+                this.tryBlockAction(block,'movement','left');
               }
-              else if(key === 'ArrowRight' || key ===  'd'){
-                this.tryMoveBlock(block, 'right');
+              else if(['ArrowRight','d','D'].includes(key)){
+                this.tryBlockAction(block,'movement','right');
+              }
+              else if(['q','Q','LeftShift'].includes(key)){
+                this.tryBlockAction(block,'rotation','left');
+              }
+              else if(['e','E',' '].includes(key)){
+                this.tryBlockAction(block,'rotation','right');
               }
             }
             catch (_){}; // Input reading timeout
@@ -313,7 +471,7 @@ export class Game {
         else {
           await sleep(12);
         }
-        canMoveDown = this.tryMoveBlock(block, 'down');
+        canMoveDown = this.tryBlockAction(block,'movement','down');
       }
       this.clearRows();
     }
