@@ -25,3 +25,5 @@ export type OrientationGrids = OrientationGridsAll | OrientationGridsTwo | Orien
 export type MovementDirection = 'left' | 'right' | 'down';
 export type RotationDirection = 'left' | 'right';
 export type BlockActionType = 'movement' | 'rotation';
+
+export type SetState<T> = React.Dispatch<React.SetStateAction<T>>;

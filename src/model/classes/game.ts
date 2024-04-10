@@ -1,6 +1,8 @@
+import Block,
+  { L_Block,L2_Block,I_Block,S_Block,Square_Block,T_Block,Z_Block }
+from "@/model/classes/block";
 import Grid from "@/model/classes/grid";
-import Block, { L_Block,L2_Block,I_Block,S_Block,Square_Block,T_Block,Z_Block } from "@/model/classes/block";
-import { BlockActionType,MovementDirection,RotationDirection } from "@/model/types";
+import { BlockActionType,MovementDirection,RotationDirection,SetState } from "@/model/types";
 import { sleep, readKey } from "@/model/functions";
 
 export default class Game {
@@ -8,12 +10,12 @@ export default class Game {
   private score: number;
   private rowsCleared: number;
   private nextBlocks: Block[];
-  private setPlayfieldCallback: React.Dispatch<React.SetStateAction<string[][]|undefined>>;
-  private setScoreCallback: React.Dispatch<React.SetStateAction<number|undefined>>;
+  private setPlayfieldCallback: SetState<string[][]|undefined>;
+  private setScoreCallback: SetState<number|undefined>;
 
   constructor(
-    setPlayfieldCallback: React.Dispatch<React.SetStateAction<string[][]|undefined>>,
-    setScoreCallback: React.Dispatch<React.SetStateAction<number|undefined>>,
+    setPlayfieldCallback: SetState<string[][]|undefined>,
+    setScoreCallback: SetState<number|undefined>,
     playfieldWidth?: number,
     playfieldHeight?: number
     ) {
@@ -25,11 +27,11 @@ export default class Game {
     this.setScoreCallback = setScoreCallback;
   }
 
-  get speed() : number {
-    const maxSpeed = 1000; // ms
-    const minSpeed = 50;   // ms
+  get levelSpeedTimeout() : number {
+    const maxTimeout = 1000; // ms
+    const minTimeout = 50;   // ms
     // Decreases 50 ms each level
-    return Math.max(minSpeed, maxSpeed - (this.level-1 * minSpeed));
+    return Math.max(minTimeout, maxTimeout - (this.level-1 * minTimeout));
   }
 
   get level() : number {
@@ -140,9 +142,9 @@ export default class Game {
         if(!skip){
           const startTime: number = Date.now();
           let endTime: number = startTime;
-          while(endTime - startTime < this.speed){
+          while(endTime - startTime < this.levelSpeedTimeout){
             try{
-              const key = (await readKey(this.speed)).key!;
+              const key = (await readKey(this.levelSpeedTimeout)).key!;
               if(['ArrowDown','s','S','Enter'].includes(key)){
                 skip = true;
                 break;
