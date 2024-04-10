@@ -86,20 +86,26 @@ export default class Game {
   }
 
   private getRandomBlock() : Block {
-    const blocks = [
-      new L_Block(this.playfield),
-      new L2_Block(this.playfield),
-      new I_Block(this.playfield),
-      new S_Block(this.playfield),
-      new Square_Block(this.playfield),
-      new T_Block(this.playfield),
-      new Z_Block(this.playfield),
-    ];
-
     const min = 0;
-    const max = blocks.length;
+    const max = 7;
     const randomIndex = Math.floor(Math.random() * (max - min) + min);
-    return blocks[randomIndex];
+
+    switch(randomIndex){
+      case 0:
+        return new L_Block(this.playfield);
+      case 1:
+        return new L2_Block(this.playfield);
+      case 3:
+        return new I_Block(this.playfield);
+      case 4:
+        return new S_Block(this.playfield);
+      case 5:
+        return new Square_Block(this.playfield);
+      case 6:
+        return new T_Block(this.playfield);
+      default: 
+        return new Z_Block(this.playfield);
+    }
   }
 
   private tryBlockAction(
