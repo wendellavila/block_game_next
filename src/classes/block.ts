@@ -1,10 +1,10 @@
-import { XY } from "@/model/types";
+import { XY } from '@/typing/types';
 import { 
   OrientationGrids,OrientationGridsAll,OrientationGridsOnly,OrientationGridsTwo,
   Orientation,OrientationAll,OrientationTwo,OrientationOnly,
   MovementDirection,RotationDirection
-} from "@/model/types";
-import Grid from "@/model/classes/grid";
+} from '@/typing/types';
+import Grid from '@/classes/grid';
 
 export default abstract class Block {
   protected orientationGrids: OrientationGrids;

@@ -1,9 +1,9 @@
 import Block,
   { L_Block,L2_Block,I_Block,S_Block,Square_Block,T_Block,Z_Block }
-from "@/model/classes/block";
-import Grid from "@/model/classes/grid";
-import { BlockActionType,MovementDirection,RotationDirection,SetState } from "@/model/types";
-import { sleep, readKey } from "@/model/functions";
+from '@/classes/block';
+import Grid from '@/classes/grid';
+import { BlockActionType,MovementDirection,RotationDirection,SetState } from '@/typing/types';
+import { sleep, readKey } from '@/utils/functions';
 
 export default class Game {
   private playfield: Grid;
@@ -133,7 +133,7 @@ export default class Game {
     this.setScoreCallback(this.score);
   }
 
-  async play() : Promise<void> {
+  async play() : Promise<number> {
     this.updatePlayfieldState();
     await sleep(200);
     while(this.nextBlocks[0].canPlace()){
@@ -179,6 +179,7 @@ export default class Game {
       }
       this.clearRows();
     }
+    return this.score;
     // Game Over
   }
 }

@@ -1,9 +1,7 @@
 import { ReactNode } from "react";
+import { pixelify } from "../utils/constants";
 
-import { Pixelify_Sans } from "next/font/google";
-import GameArea from "./client";
-
-const pixelify = Pixelify_Sans({ subsets: ["latin"] });
+import GameArea from "@/app/client";
 
 function Header() : ReactNode {
   const title: string = 'Block Game';
@@ -45,9 +43,6 @@ function Header() : ReactNode {
 }
 
 export default function Home() {
-
-
-
   return (
     <>
       <Header/>

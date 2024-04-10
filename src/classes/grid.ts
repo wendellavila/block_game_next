@@ -1,5 +1,5 @@
-import { XY } from "@/model/types";
-import { defaultPlayfieldSize } from "@/model/constants";
+import { XY } from '@/typing/types';
+import { defaultPlayfieldSize } from '@/utils/constants';
 
 export default class Grid {
   values: string[][];

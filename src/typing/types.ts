@@ -1,4 +1,4 @@
-import Grid from '@/model/classes/grid';
+import Grid from '@/classes/grid';
 
 export type XY = {x: number, y: number};
 

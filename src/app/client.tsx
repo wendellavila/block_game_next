@@ -1,6 +1,6 @@
 'use client';
-import { ReactNode, useEffect, useState } from "react";
-import Game from "@/model/classes/game";
+import { ReactNode, useEffect, useState } from 'react';
+import Game from '@/classes/game';
 
 function PlayfieldGrid(props: { playfield?: string[][] }): ReactNode {
   return (
@@ -17,7 +17,7 @@ function PlayfieldGrid(props: { playfield?: string[][] }): ReactNode {
               <div
                 key={`${rowIndex}${cellIndex}`}
                 id={`playfield-row-${rowIndex+1}-cell-${cellIndex+1}`}
-                className={`h-10 w-10 border-[1px] border-neutral-900
+                className={`h-6 w-6 border-[1px] border-neutral-900
                 ${cell === ' ' ? 'bg-neutral-800' : 'bg-red-500'}`}
               ></div>
             )}
@@ -29,19 +29,15 @@ function PlayfieldGrid(props: { playfield?: string[][] }): ReactNode {
 }
 
 export default function GameArea(): ReactNode {
-  const [playfield, setPlayfield] = useState<string[][] | undefined>(undefined);
-  const [score, setScore] = useState<number | undefined>(undefined);
+  const [ playfield, setPlayfield ] = useState<string[][] | undefined>(undefined);
+  const [ score, setScore ] = useState<number | undefined>(undefined);
   const game = new Game(setPlayfield, setScore);
 
   useEffect(()=>{
     const startGame = async() => {
-      await game.play();
+      return await game.play();
     };
     startGame();
-
-    return () => {
-      // this now gets called when the component unmounts
-    };
   }, []);
 
   return (

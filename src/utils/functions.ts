@@ -9,7 +9,7 @@ export async function readKey(timeout?: number) : Promise<KeyboardEventInit>{
 
     if(timeout){
       timeoutRef = setTimeout(
-        () => reject('longCalculation took too long'),
+        () => reject(`No keys pressed in ${timeout} ms.`),
         timeout
       );
     }
