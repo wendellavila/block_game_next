@@ -1,7 +1,6 @@
 'use client';
 import { ReactNode, useEffect, useState } from "react";
-import { PlayfieldYX } from "@/model/types";
-import { Game } from "@/model/classes";
+import Game from "@/model/classes/game";
 
 function PlayfieldGrid(props: { playfield?: string[][] }): ReactNode {
   return (
