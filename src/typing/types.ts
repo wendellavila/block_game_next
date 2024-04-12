@@ -27,3 +27,5 @@ export type RotationDirection = 'left' | 'right';
 export type BlockActionType = 'movement' | 'rotation';
 
 export type SetState<T> = React.Dispatch<React.SetStateAction<T>>;
+
+export type GameStatus = "not started" | "playing" | "over";

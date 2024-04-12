@@ -4,6 +4,7 @@ import Game from '@/classes/game';
 import { getBlockBackground,getFirstNonEmptyChar } from '@/utils/functions';
 
 import { silkscreen } from '@/utils/constants';
+import { GameStatus } from '@/typing/types'
 
 function PlayfieldGrid(props: { playfield?: string[][] }): ReactNode {
   return (
@@ -122,7 +123,18 @@ function Scoreboard(props: {id?: string, title: string, value: number}) : ReactN
   );
 }
 
+function PlayButton(props: {onClick?: () => void}) : ReactNode {
+  return (
+    <button
+      className="px-4 py-1 bg-transparent border-2 border-solid border-red-500 tex-red-500"
+      onClick={props.onClick}
+    >▶ Play</button>
+  );
+}
+
 export default function GameArea(): ReactNode {
+  const [ gameStatus, setGameStatus ] = useState<GameStatus>("not started");
+
   const [ playfield, setPlayfield ] = useState<string[][] | undefined>(undefined);
   const [ score, setScore ] = useState<number>(0);
   const [ level, setLevel ] = useState<number>(1);
@@ -155,19 +167,48 @@ export default function GameArea(): ReactNode {
     );
   };
 
-  useEffect(()=>{
-    (async() => await game.play())();
-  }, []);
-
   return (
-    <div className={`flex flex-row gap-4 ${silkscreen.className}`}>
-      <HoldBlock block={holdBlock}/>
-      <PlayfieldGrid playfield={playfield}/>
-      <div className="flex flex-col items-center gap-4">
-        <NextBlocks blocks={nextBlocks}/>
-        <Scoreboard id="level" title="Level" value={level}/>
-        <Scoreboard id="score" title="Score" value={score}/>
-      </div>
+    <div className={`flex flex-row gap-4 grow`}>
+      {
+        gameStatus === 'not started' &&
+        <section id="game-start" className="flex flex-col items-center justify-center">
+          <PlayButton onClick={
+            async ()=>{
+              setGameStatus('playing');
+              await game.play();
+              setGameStatus('over');
+            }
+          }/>
+        </section>
+      }
+      {
+        gameStatus === 'playing' &&
+        <section id="game">
+          <HoldBlock block={holdBlock}/>
+          <PlayfieldGrid playfield={playfield}/>
+          <div className="flex flex-col items-center gap-4">
+            <NextBlocks blocks={nextBlocks}/>
+            <Scoreboard id="level" title="Level" value={level}/>
+            <Scoreboard id="score" title="Score" value={score}/>
+          </div>
+        </section>
+      }
+      {
+        gameStatus === 'over' &&
+        <section id="game-over" className="flex flex-col items-center justify-center">
+          <span>Game Over</span>
+          <span>Score: {score}</span>
+          <span>Play again?</span>
+          <PlayButton onClick={
+            async ()=>{
+              clearStates();
+              setGameStatus('playing');
+              await game.play();
+              setGameStatus('over');
+            }
+          }/>
+        </section>
+      }
     </div>
   );
 }
