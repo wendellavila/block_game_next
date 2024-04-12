@@ -256,7 +256,7 @@ export class Z_Block extends Block {
   constructor(playfield: Grid){
     const layouts = [
       [
-        ['Z','Z',''],
+        ['Z','Z',' '],
         [' ','Z','Z']
       ],
       [

@@ -1,42 +1,27 @@
-import { ReactNode } from "react";
-import { pixelify } from "../utils/constants";
+import { ReactNode } from 'react';
+import { pixelify } from '@/utils/constants';
 
-import GameArea from "@/app/client";
+import GameArea from '@/app/client';
+import { textColorClasses } from '@/utils/constants';
+import { getCircularListIndex } from '@/utils/functions';
 
 function Header() : ReactNode {
   const title: string = 'Block Game';
-  const colors: string[] = [
-    'text-red-500', 'text-orange-500','text-yellow-500',
-    'text-green-500', 'text-blue-500', 'text-purple-500'
-  ];
-
-  /**
-   * Helps turn a list into a circular list by returning a valid index for any provided n
-   * @param n - A positive integer.
-   * @param length - The length of a list
-   * @returns - An integer bigger or equal to 0 and smaller than length.
-   */
-  const getCircularListIndex = (n: number, length: number) : number => {
-    return n - (Math.floor(n / length) * length);
-  }
 
   return (
     <header>
-      <h1 className={`text-center text-[50px] ${pixelify.className}`}>
-        {
-          title.split(' ').map(
-            (word, wordIndex) => word.split('').map(
-              (letter, letterIndex) =>
-              <span
-                key={`${word}${letterIndex}`}
-                className={colors[getCircularListIndex(letterIndex, colors.length)]}
-              >
-                { wordIndex > 0 && letterIndex === 0 ? <> </> : <></> /* Renders spaces between words */}
-                {letter}
-              </span>
-            )
-          )
-        }
+      <h1 id="title" className={`text-center text-[3rem] ${pixelify.className}`}>
+        { title.split('').map((letter, letterIndex) =>
+          <span
+            id={`title-letter-${letterIndex+1}`}
+            key={`title-letter-${letterIndex+1}`}
+            className={`${textColorClasses[
+              getCircularListIndex(letterIndex, textColorClasses.length)
+            ]}`}
+          >
+            {letter}
+          </span>
+        )}
       </h1>
     </header>
   );
@@ -45,7 +30,7 @@ function Header() : ReactNode {
 export default function Home() {
   return (
     <>
-      <Header/>
+      {/* <Header/> */}
       <main className="flex min-h-screen flex-col items-center justify-between p-8">
         <GameArea/>
       </main>

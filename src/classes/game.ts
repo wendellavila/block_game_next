@@ -11,20 +11,35 @@ export default class Game {
   private rowsCleared: number;
   private nextBlocks: Block[];
   private setPlayfieldCallback: SetState<string[][]|undefined>;
-  private setScoreCallback: SetState<number|undefined>;
+  private setLevelCallback: SetState<number>;
+  private setScoreCallback: SetState<number>;
+  private setNextBlocksCallback: SetState<string[][][]>;
+  private setHoldBlockCallback: SetState<string[][]|undefined>;
 
   constructor(
-    setPlayfieldCallback: SetState<string[][]|undefined>,
-    setScoreCallback: SetState<number|undefined>,
-    playfieldWidth?: number,
-    playfieldHeight?: number
+    args: {
+      setPlayfieldCallback: SetState<string[][]|undefined>,
+      setLevelCallback: SetState<number>,
+      setScoreCallback: SetState<number>,
+      setNextBlocksCallback: SetState<string[][][]>,
+      setHoldBlockCallback: SetState<string[][]|undefined>,
+      playfieldWidth?: number,
+      playfieldHeight?: number
+    }
     ) {
-    this.playfield = new Grid({width: playfieldWidth, height: playfieldHeight});
+    this.playfield = new Grid({width: args.playfieldWidth, height: args.playfieldHeight});
     this.score = 0;
     this.rowsCleared = 0;
-    this.nextBlocks = new Array(3).fill(this.getRandomBlock());
-    this.setPlayfieldCallback = setPlayfieldCallback;
-    this.setScoreCallback = setScoreCallback;
+    this.nextBlocks = [
+      this.getRandomBlock(),
+      this.getRandomBlock(),
+      this.getRandomBlock()
+    ];
+    this.setPlayfieldCallback = args.setPlayfieldCallback;
+    this.setLevelCallback = args.setLevelCallback;
+    this.setScoreCallback = args.setScoreCallback;
+    this.setNextBlocksCallback = args.setNextBlocksCallback;
+    this.setHoldBlockCallback = args.setHoldBlockCallback;
   }
 
   get levelSpeedTimeout() : number {
@@ -51,7 +66,7 @@ export default class Game {
           if(this.playfield.getXY({y, x}) === ' ') emptyCount++;
         }
         if(emptyCount === 0){
-          // Move each row one row below
+          // Copy each row to row below
           for(let y2 = y; y2 >= 1; y2--){
             this.playfield.setValues(
               new Grid({values: [this.playfield.getRow(y2-1)]}),
@@ -78,6 +93,7 @@ export default class Game {
       this.score += 40 * rowsCleared * this.level;
       this.rowsCleared += rowsCleared;
       this.updateScoreState();
+      this.updateLevelState();
     }
   }
 
@@ -86,9 +102,9 @@ export default class Game {
   }
 
   private getRandomBlock() : Block {
-    const min = 0;
-    const max = 7;
-    const randomIndex = Math.floor(Math.random() * (max - min) + min);
+    const min: number = 0;
+    const max: number = 7;
+    const randomIndex: number = Math.floor(Math.random() * (max - min) + min);
 
     switch(randomIndex){
       case 0:
@@ -126,13 +142,27 @@ export default class Game {
   }
 
   private updatePlayfieldState() : void {
-    this.setPlayfieldCallback(() => structuredClone(this.playfield.values));
+    this.setPlayfieldCallback(structuredClone(this.playfield.values));
+  }
+
+  private updateNextBlocks() : void {
+    this.setNextBlocksCallback(this.nextBlocks.map(block => structuredClone(block.grid.values)));
   }
 
   private updateScoreState() : void {
     this.setScoreCallback(this.score);
   }
 
+  private updateLevelState() : void {
+    this.setLevelCallback(this.level);
+  }
+
+  private updateHoldBlockState () : void {
+    this.setHoldBlockCallback(undefined);
+  }
+  /**
+   * @returns {number} Final score
+   */
   async play() : Promise<number> {
     this.updatePlayfieldState();
     await sleep(200);
@@ -140,6 +170,7 @@ export default class Game {
       const block: Block = this.nextBlocks.shift()!;
       this.nextBlocks.push(this.getRandomBlock());
       this.placeBlock(block);
+      this.updateNextBlocks();
       
       let skip: boolean = false;
       let canMoveDown: boolean = true;
@@ -179,7 +210,7 @@ export default class Game {
       }
       this.clearRows();
     }
-    return this.score;
     // Game Over
+    return this.score;
   }
 }
