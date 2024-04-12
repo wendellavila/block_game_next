@@ -4,6 +4,25 @@ import Game from '@/classes/game';
 import { GameStatus } from '@/typing/types';
 import { HoldBlock,NextBlocks,PlayButton,PlayfieldGrid,Scoreboard } from '@/components/client';
 
+function GameOver(props: {score: number, onClick: () => void}){
+  return (
+    <section id="game-over" className="flex flex-col items-center justify-center grow">
+      <span className="text-xl mb-1">Game Over</span>
+      <span className="text-md mb-4">Score: {props.score}</span>
+      <span className="text-sm mb-2">Play again?</span>
+      <PlayButton onClick={props.onClick}/>
+    </section>
+  );
+}
+
+function GameNotStarted(props: {onClick: () => void}){
+  return (
+    <section id="game-start" className="flex flex-col items-center justify-center grow">
+      <PlayButton onClick={props.onClick}/>
+    </section>
+  );
+}
+
 export default function GameArea() {
   const [ gameStatus, setGameStatus ] = useState<GameStatus>("not started");
 
@@ -22,7 +41,7 @@ export default function GameArea() {
     })
   );
 
-  const clearStates = () => {
+  const resetGameState = () => {
     setPlayfield(undefined);
     setScore(0);
     setLevel(1);
@@ -39,37 +58,30 @@ export default function GameArea() {
     );
   };
 
+  const startGame = async(resetState?: boolean) => {
+    if(resetState === true) resetGameState();
+    setGameStatus('playing');
+    await game.play();
+    setGameStatus('over');
+  }
+
   return (
-    <main className="flex flex-col items-center justify-between p-8 grow">
+    <main className="flex flex-col items-center justify-center p-8 grow">
       { gameStatus === 'not started' &&
-        <section id="game-start" className="flex flex-col items-center justify-center grow">
-          <PlayButton onClick={
-            async () => {
-              setGameStatus('playing');
-              await game.play();
-              setGameStatus('over');
-            }
-          }/>
-        </section>
+        <GameNotStarted onClick={() => startGame(false)}/>
       }
       { gameStatus === 'over' &&
-        <section id="game-over" className="flex flex-col items-center justify-center grow">
-          <span className="text-lg mb-1">Game Over</span>
-          <span className="text-md mb-4">Score: {score}</span>
-          <span className="mb-1">Play again?</span>
-          <PlayButton onClick={
-            async () => {
-              clearStates();
-              setGameStatus('playing');
-              await game.play();
-              setGameStatus('over');
-            }
-          }/>
-        </section>
+        <GameOver score={score} onClick={() => startGame(true)}/>
       }
-      { gameStatus === 'playing' &&
+      { (gameStatus === 'playing'/* || gameStatus === 'over'  Show game underneath game over screen */) &&
         <section id="game" className="flex flex-row gap-4 grow">
-          <HoldBlock block={holdBlock}/>
+          <div className="flex flex-col items-center">
+            <HoldBlock block={holdBlock}/>
+            <button
+              aria-label="Restart"
+              onClick={() => startGame(true)}
+            >↺</button>
+          </div>
           <PlayfieldGrid playfield={playfield}/>
           <div className="flex flex-col items-center gap-4">
             <NextBlocks blocks={nextBlocks}/>

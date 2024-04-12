@@ -9,7 +9,7 @@ export default async function TitleHeader(props: {title?: string}) {
       <h1
         id="title"
         className={`text-center text-[3rem] ${pixelify.className}
-        animate-ping animate-once animate-ease-in animate-reverse`}
+        animate-ping animate-once animate-ease-in animate-reverse animate-duration-700`}
       >
         { props.title && props.title.split('').map((letter, letterIndex) =>
           <span
