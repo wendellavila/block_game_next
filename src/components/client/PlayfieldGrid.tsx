@@ -1,10 +1,13 @@
 'use client';
 import { getBlockBackground } from '@/utils/functions';
 
-export default function PlayfieldGrid(props: { playfield?: string[][] }) {
+export default function PlayfieldGrid(props: {playfield?: string[][]}) {
   return (
     props.playfield &&
-    <section id="playfield">
+    <section
+      id="playfield"
+      className="animate-fade-down animate-ease-out animate-duration-500"
+    >
       { props.playfield.map((row, rowIndex) =>
         <div
           key={`playfield-row-${rowIndex+1}`}

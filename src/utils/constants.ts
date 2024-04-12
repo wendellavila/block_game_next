@@ -15,7 +15,7 @@ export const defaultPlayfieldSize = {
   height: 20
 };
 
-export const textColorClasses = [
+export const headerColors = [
   'text-red-500', 'text-orange-500','text-yellow-500',
   'text-green-500', 'text-blue-500', 'text-purple-500'
 ];

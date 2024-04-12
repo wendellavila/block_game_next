@@ -5,10 +5,10 @@ import { SectionLabel } from '@/components/client';
 export default function HoldBlock(props: {block?: string [][]}) {
 
   return (
-    <section className="flex flex-col items-center">
-      <SectionLabel>
-        Hold
-      </SectionLabel>
+    <section
+      className="flex flex-col items-center animate-fade-down animate-ease-out animate-duration-700"
+    >
+      <SectionLabel>Hold</SectionLabel>
       <div
         id={`hold-block-layout`}
         className={`flex flex-col items-center justify-center p-2

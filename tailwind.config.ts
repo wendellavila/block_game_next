@@ -7,7 +7,9 @@ const config: Config = {
   ],
   theme: {
   },
-  plugins: [],
+  plugins: [
+    require('tailwindcss-animated')
+  ],
   safelist: [
     {pattern: /(bg|text)-(red|yellow|orange|blue|cyan|green|purple)-500/},
     {pattern: /bg-neutral-800/}

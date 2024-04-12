@@ -5,6 +5,7 @@ export default function PlayButton(props: {onClick?: () => void}) {
     <button
       className="px-4 py-1 bg-transparent border-2 border-solid animate-pulse
       border-red-500 text-white"
+      aria-label="Play Game"
       onClick={props.onClick}
     >▶ Play</button>
   );

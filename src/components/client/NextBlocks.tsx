@@ -4,10 +4,11 @@ import { SectionLabel } from '@/components/client';
 
 export default function NextBlocks(props: {blocks : string[][][]}) {
   return (
-    <section id="next-blocks" className="flex flex-col items-center">
-      <SectionLabel>
-        Next
-      </SectionLabel>
+    <section
+      id="next-blocks"
+      className="flex flex-col items-center animate-fade-down animate-ease-out animate-duration-700"
+    >
+      <SectionLabel>Next</SectionLabel>
       { props.blocks.map((block, blockIndex) => 
         <div id={`next-block-${blockIndex+1}`} key={blockIndex} className="mt-4">
           { block.map((row, rowIndex) => 

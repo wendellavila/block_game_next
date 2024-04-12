@@ -52,17 +52,6 @@ export default function GameArea() {
           }/>
         </section>
       }
-      { gameStatus === 'playing' &&
-        <section id="game" className="flex flex-row gap-4 grow">
-          <HoldBlock block={holdBlock}/>
-          <PlayfieldGrid playfield={playfield}/>
-          <div className="flex flex-col items-center gap-4">
-            <NextBlocks blocks={nextBlocks}/>
-            <Scoreboard id="level" title="Level" value={level}/>
-            <Scoreboard id="score" title="Score" value={score}/>
-          </div>
-        </section>
-      }
       { gameStatus === 'over' &&
         <section id="game-over" className="flex flex-col items-center justify-center grow">
           <span className="text-lg mb-1">Game Over</span>
@@ -76,6 +65,17 @@ export default function GameArea() {
               setGameStatus('over');
             }
           }/>
+        </section>
+      }
+      { gameStatus === 'playing' &&
+        <section id="game" className="flex flex-row gap-4 grow">
+          <HoldBlock block={holdBlock}/>
+          <PlayfieldGrid playfield={playfield}/>
+          <div className="flex flex-col items-center gap-4">
+            <NextBlocks blocks={nextBlocks}/>
+            <Scoreboard id="level" title="Level" value={level}/>
+            <Scoreboard id="score" title="Score" value={score}/>
+          </div>
         </section>
       }
     </main>

@@ -10,7 +10,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`min-h-screen flex flex-col ${silkscreen.className}`}>
+      <body className={`min-h-screen flex flex-col ${silkscreen.className} overflow-hidden`}>
         {children}
       </body>
     </html>
