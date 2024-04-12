@@ -1,39 +1,11 @@
-import { ReactNode } from 'react';
-import { pixelify } from '@/utils/constants';
-
-import GameArea from '@/app/client';
-import { textColorClasses } from '@/utils/constants';
-import { getCircularListIndex } from '@/utils/functions';
-
-function Header() : ReactNode {
-  const title: string = 'Block Game';
-
-  return (
-    <header>
-      <h1 id="title" className={`text-center text-[3rem] ${pixelify.className}`}>
-        { title.split('').map((letter, letterIndex) =>
-          <span
-            id={`title-letter-${letterIndex+1}`}
-            key={`title-letter-${letterIndex+1}`}
-            className={`${textColorClasses[
-              getCircularListIndex(letterIndex, textColorClasses.length)
-            ]}`}
-          >
-            {letter}
-          </span>
-        )}
-      </h1>
-    </header>
-  );
-}
+import { TitleHeader } from '@/components/server';
+import { GameArea } from '@/components/client';
 
 export default function Home() {
   return (
     <>
-      {/* <Header/> */}
-      <main className="flex flex-col items-center justify-between p-8 grow">
-        <GameArea/>
-      </main>
+      <TitleHeader title="Block Game"/>
+      <GameArea/>
     </>
   );
 }

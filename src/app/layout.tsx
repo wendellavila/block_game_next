@@ -1,6 +1,7 @@
-import { inter,silkscreen } from '@/utils/constants';
 import './globals.css';
 export { metadata } from '@/utils/constants';
+
+import { silkscreen } from '@/utils/constants';
 
 export default function RootLayout({
   children,
