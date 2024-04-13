@@ -142,14 +142,14 @@ export default abstract class Block {
       return false;
     }
     else if('upward' in this.orientationGrids){
-      return this.tryRotateTwo(direction);
+      return this.tryRotateTwo();
     }
     else {
       return this.tryRotateAll(direction);
     }
   }
 
-  tryRotateTwo(direction: RotationDirection): boolean {
+  tryRotateTwo(): boolean {
     if(!('upward' in this.orientationGrids)){
       return false;
     }
