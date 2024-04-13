@@ -29,17 +29,6 @@ export function getBlockBackground(char: string){
   }
 }
 
-export function getFirstNonEmptyChar(matrix: string[][]) : string {
-  for(let y = 0; y < matrix.length; y++){
-    for(let x = 0; x < matrix[0].length; x++){
-      if(matrix[y][x] !== ' ' && matrix[y][x] !== ''){
-        return matrix[y][x];
-      }
-    }
-  }
-  return ' ';
-};
-
 export async function sleep(ms: number) : Promise<void>{
   return new Promise((r) => setTimeout(r, ms));
 }

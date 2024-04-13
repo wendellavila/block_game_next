@@ -34,7 +34,7 @@ export default class Grid {
     return this.values.length;
   }
 
-  setValues(values: Grid, startPosition: XY) : void {
+  setValues(values: Grid, startPosition: XY, skipEmpty?: boolean) : void {
     const yStart = Math.max(startPosition.y, 0);
     const yEnd = Math.min(startPosition.y+values.height, this.height);
 
@@ -43,10 +43,16 @@ export default class Grid {
 
     for(let y = yStart; y < yEnd; y++){
       for(let x = xStart; x < xEnd; x++){
-        this.values[y][x] = values.getXY({
+        const value = values.getXY({
           x: x-startPosition.x,
           y: y-startPosition.y
         });
+        if(skipEmpty === true && value === ' '){
+          continue;
+        }
+        else {
+          this.values[y][x] = value;
+        }
       }
     }
   }

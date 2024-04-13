@@ -127,14 +127,14 @@ export default class Game {
   private tryBlockAction(
     block: Block,
     type: BlockActionType,
-    direction?: MovementDirection | RotationDirection
+    direction: MovementDirection | RotationDirection
   ) : boolean {
     let moveSuccessful: boolean = false;
 
-    if(type === 'rotation' && direction && direction !== 'down'){
+    if(type === 'rotation' && direction !== 'down'){
       moveSuccessful = block.tryRotate(direction);
     }
-    else if(type === 'movement' && direction) {
+    else if(type === 'movement') {
       moveSuccessful = block.tryMove(direction);
     }
     if(moveSuccessful) this.updatePlayfieldState();
