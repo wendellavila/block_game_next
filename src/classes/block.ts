@@ -150,7 +150,46 @@ export default abstract class Block {
   }
 
   tryRotateTwo(direction: RotationDirection): boolean {
-    return false;
+    if(!('upward' in this.orientationGrids)){
+      return false;
+    }
+    
+    let tempPosition: XY;
+    let tempOrientation: OrientationTwo;
+
+    if(this.orientation === 'upward'){
+      tempOrientation = 'sideways';
+      tempPosition = {y: this.position.y, x: this.position.x+1};
+    }
+    else {
+      tempOrientation = 'upward';
+      tempPosition = {y: this.position.y+1, x: this.position.x-1};
+    }
+
+    let tempPlayfield: Grid = new Grid({values: structuredClone(this.playfield.values)});
+    //Remove current block from playfield
+    tempPlayfield.setValues(
+      new Grid({width: this.width, height: this.height}),
+      this.position
+    );
+    const tempBlockGrid = this.orientationGrids[tempOrientation];
+    //Check if block overlaps filled positions of playfield after move
+    for(let y = 0; y < tempBlockGrid.height; y++){
+      if(y+tempPosition.y < 0) continue;
+      for(let x = 0; x < tempBlockGrid.width; x++){
+        const playfieldPixel = tempPlayfield.getXY({x: x+tempPosition.x,y: y+tempPosition.y});
+        //const blockPixel = tempBlockGrid.getXY({x,y});
+        if(playfieldPixel !== ' '){
+          return false;
+        }
+      }
+    }
+    //Commits rotation
+    tempPlayfield.setValues(tempBlockGrid, tempPosition);
+    this.orientation = tempOrientation;
+    this.position = {y: tempPosition.y, x: tempPosition.x};
+    this.playfield.setValues(tempPlayfield, {y: 0, x: 0});
+    return true;
   }
 
   tryRotateAll(direction: RotationDirection): boolean {

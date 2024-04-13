@@ -7,9 +7,9 @@ import { HoldBlock,NextBlocks,PlayButton,PlayfieldGrid,Scoreboard } from '@/comp
 function GameOver(props: {score: number, onClick: () => void}){
   return (
     <section id="game-over" className="flex flex-col items-center justify-center grow">
-      <span className="text-xl mb-1">Game Over</span>
-      <span className="text-md mb-4">Score: {props.score}</span>
-      <span className="text-sm mb-2">Play again?</span>
+      <span className="text-3xl mb-1">Game Over</span>
+      <span className="text-xl mb-6">Score: {props.score}</span>
+      <span className="text-md mb-4">Play again?</span>
       <PlayButton onClick={props.onClick}/>
     </section>
   );
@@ -17,7 +17,7 @@ function GameOver(props: {score: number, onClick: () => void}){
 
 function GameNotStarted(props: {onClick: () => void}){
   return (
-    <section id="game-start" className="flex flex-col items-center justify-center grow">
+    <section id="game-start" className="">
       <PlayButton onClick={props.onClick}/>
     </section>
   );
@@ -66,7 +66,7 @@ export default function GameArea() {
   }
 
   return (
-    <main className="flex flex-col items-center justify-center p-8 grow">
+    <main className="flex flex-col p-8 items-center">
       { gameStatus === 'not started' &&
         <GameNotStarted onClick={() => startGame(false)}/>
       }
@@ -75,13 +75,7 @@ export default function GameArea() {
       }
       { (gameStatus === 'playing'/* || gameStatus === 'over'  Show game underneath game over screen */) &&
         <section id="game" className="flex flex-row gap-4 grow">
-          <div className="flex flex-col items-center">
-            <HoldBlock block={holdBlock}/>
-            <button
-              aria-label="Restart"
-              onClick={() => startGame(true)}
-            >↺</button>
-          </div>
+          <HoldBlock block={holdBlock}/>
           <PlayfieldGrid playfield={playfield}/>
           <div className="flex flex-col items-center gap-4">
             <NextBlocks blocks={nextBlocks}/>
