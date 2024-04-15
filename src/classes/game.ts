@@ -9,6 +9,7 @@ export default class Game {
   private playfield: Grid;
   private score: number;
   private rowsCleared: number;
+  private onHoldBlock: Block | undefined;
   private nextBlocks: Block[];
   private setPlayfieldCallback: SetState<string[][]|undefined>;
   private setLevelCallback: SetState<number>;
@@ -131,7 +132,7 @@ export default class Game {
   ) : boolean {
     let moveSuccessful: boolean = false;
 
-    if(type === 'rotation' && direction !== 'down'){
+    if(type === 'rotation'&& direction !== 'down'){
       moveSuccessful = block.tryRotate(direction);
     }
     else if(type === 'movement') {
@@ -139,6 +140,37 @@ export default class Game {
     }
     if(moveSuccessful) this.updatePlayfieldState();
     return moveSuccessful;
+  }
+
+  private holdBlock(
+    block: Block
+  ) : Block | undefined {
+    let onPlayBlock: Block | undefined = undefined;
+
+    //Remove current block from playfield
+    this.playfield.setValues(
+      new Grid({width: block.width, height: block.height}),
+      block.position
+    );
+    
+    if(this.onHoldBlock){
+      onPlayBlock = this.onHoldBlock;
+      onPlayBlock.resetPosition(this.playfield);
+      this.onHoldBlock = block;
+    }
+    else {
+      this.onHoldBlock = block;
+    }
+    this.updateHoldBlockState();
+    return onPlayBlock;
+  }
+
+  private getNextBlock() : Block {
+    const block: Block = this.nextBlocks.shift()!;
+    this.nextBlocks.push(this.getRandomBlock());
+    this.placeBlock(block);
+    this.updateNextBlocks();
+    return block;
   }
 
   private updatePlayfieldState() : void {
@@ -158,7 +190,7 @@ export default class Game {
   }
 
   private updateHoldBlockState () : void {
-    this.setHoldBlockCallback(undefined);
+    this.setHoldBlockCallback(this.onHoldBlock ? this.onHoldBlock.grid.values : undefined);
   }
   /**
    * @returns {number} Final score
@@ -167,14 +199,11 @@ export default class Game {
     this.updatePlayfieldState();
     await sleep(200);
     while(this.nextBlocks[0].canPlace()){
-      const block: Block = this.nextBlocks.shift()!;
-      this.nextBlocks.push(this.getRandomBlock());
-      this.placeBlock(block);
-      this.updateNextBlocks();
-      
+      let block: Block = this.getNextBlock();
       let skip: boolean = false;
       let canMoveDown: boolean = true;
-      while(canMoveDown){
+      let blockStored: boolean = false;
+      while(canMoveDown && !blockStored){
         this.updatePlayfieldState();
         if(!skip){
           const startTime: number = Date.now();
@@ -198,15 +227,28 @@ export default class Game {
               else if(['e','E',' '].includes(key)){
                 this.tryBlockAction(block,'rotation','right');
               }
+              else if(['h', 'H'].includes(key)){
+                const returnedBlock = this.holdBlock(block);
+                if(returnedBlock){
+                  block = returnedBlock;
+                }
+                else {
+                  blockStored = true;
+                }
+                break;
+              }
             }
-            catch (_){}; // Input reading timeout
+            catch (_){}; // Input read timeout
             endTime = Date.now();
           }
         }
         else {
           await sleep(12);
         }
-        canMoveDown = this.tryBlockAction(block,'movement','down');
+        if(!blockStored){
+          canMoveDown = this.tryBlockAction(block,'movement','down');
+        }
+        
       }
       this.clearRows();
     }

@@ -43,6 +43,13 @@ export default abstract class Block {
     }
   }
 
+  resetPosition(playfield: Grid) : void {
+    this.position = <XY>{
+      x: Math.floor(playfield.width/2)-this.width+1,
+      y: -this.height+1
+    }
+  }
+
   getXY(position: XY) : string {
     return this.grid.getXY({x: position.x, y: position.y});
   }

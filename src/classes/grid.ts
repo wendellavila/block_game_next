@@ -11,8 +11,8 @@ export default class Grid {
     else {
       this.values = Array.from(
         Array<number>(args.height ?? defaultPlayfieldSize.height),
-        (_) => Array.from(
-          Array<number>(args.width ?? defaultPlayfieldSize.width), (_) => ' '
+        _ => Array.from(
+          Array<number>(args.width ?? defaultPlayfieldSize.width), _ => ' '
         )
       )
     }
