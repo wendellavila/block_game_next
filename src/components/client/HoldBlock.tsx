@@ -11,7 +11,7 @@ export default function HoldBlock(props: {block?: string [][]}) {
       <SectionLabel>Hold</SectionLabel>
       <div
         id={`hold-block-layout`}
-        className={`flex flex-col items-center justify-center p-2
+        className={`flex flex-col items-center justify-center p-2 mt-2
         border-neutral-800 border-2 border-solid ${props.block ? '' : 'w-[70px] h-[70px]'}`}
       >
         { props.block && props.block.map((row, rowIndex) => 

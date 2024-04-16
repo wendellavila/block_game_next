@@ -248,7 +248,6 @@ export default class Game {
         if(!blockStored){
           canMoveDown = this.tryBlockAction(block,'movement','down');
         }
-        
       }
       this.clearRows();
     }

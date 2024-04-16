@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import Game from '@/classes/game';
 import { GameStatus } from '@/typing/types';
-import { HoldBlock,NextBlocks,PlayButton,PlayfieldGrid,Scoreboard } from '@/components/client';
+import { HoldBlock,HowToPlay,NextBlocks,PlayButton,PlayfieldGrid,Scoreboard } from '@/components/client';
 
 function GameOver(props: {score: number, onClick: () => void}){
   return (
@@ -17,8 +17,9 @@ function GameOver(props: {score: number, onClick: () => void}){
 
 function GameNotStarted(props: {onClick: () => void}){
   return (
-    <section id="game-start" className="">
-      <PlayButton onClick={props.onClick}/>
+    <section id="game-start" className="flex flex-col items-center">
+      <PlayButton onClick={props.onClick} className="mb-8"/>
+      <HowToPlay/>
     </section>
   );
 }
