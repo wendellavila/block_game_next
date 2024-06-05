@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
-import { Inter,Pixelify_Sans,Silkscreen } from 'next/font/google';
+import { Pixelify_Sans,Silkscreen } from 'next/font/google';
 
-export const inter = Inter({ subsets: ["latin"] });
 export const pixelify = Pixelify_Sans({subsets: ["latin"]});
 export const silkscreen = Silkscreen({subsets: ["latin"], weight: ["400"]});
 

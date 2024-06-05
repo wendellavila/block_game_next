@@ -5,9 +5,12 @@ Tetris clone made with Next.js 14.
 * Classic Tetris blocks & gameplay
 * Move, rotate, and hold blocks
 * Collision detection
-* Speed increase on each level
+* Speed increases on each level
 
 ### Screenshots
-![Play Game](screenshots/play.png?raw=true "Play Game")
-![Game Ongoing](screenshots/game.png?raw=true "Game Ongoing")
+* Play Game  
+![Play Game](screenshots/play.png?raw=true "Play Game")<br><br>
+* Game Ongoing  
+![Game Ongoing](screenshots/game.png?raw=true "Game Ongoing")<br><br>
+* Game Over  
 ![Game Over](screenshots/over.png?raw=true "Game Over")

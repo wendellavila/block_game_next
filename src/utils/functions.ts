@@ -29,10 +29,15 @@ export function getBlockBackground(char: string){
   }
 }
 
+
 export async function sleep(ms: number) : Promise<void>{
   return new Promise((r) => setTimeout(r, ms));
 }
 
+/**
+ * Creates a promise that is resolved when a key is pressed.
+ * @param ms - The maximum amount of time to wait for the promise to be resolved before rejecting it.
+ */
 export async function readKey(timeout?: number) : Promise<KeyboardEventInit>{
   return new Promise((resolve, reject) => {
 

@@ -74,7 +74,7 @@ export default function GameArea() {
       { gameStatus === 'over' &&
         <GameOver score={score} onClick={() => startGame(true)}/>
       }
-      { (gameStatus === 'playing'/* || gameStatus === 'over'  Show game underneath game over screen */) &&
+      { gameStatus === 'playing' &&
         <section id="game" className="flex flex-row gap-4 grow">
           <HoldBlock block={holdBlock}/>
           <PlayfieldGrid playfield={playfield}/>
