@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 
 const isProduction = process.env.NODE_ENV === 'production';
-const basePath = isProduction ? process.env.NEXT_PUBLIC_BASE_PATH : undefined;
+const basePath = isProduction ? '/projects/block_game_next' : undefined;
 
 const nextConfig = {
     basePath: basePath,
