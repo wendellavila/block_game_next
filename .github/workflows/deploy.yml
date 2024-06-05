@@ -1,0 +1,59 @@
+name: GitHub Pages Deploy
+on:
+  push:
+    branches: [deploy]
+jobs:
+  deployment:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20]
+    env:
+      API_GITHUB_TOKEN: ${{ secrets.API_GITHUB_TOKEN }}
+      username: wendellavila
+      email: wendelljcavila@gmail.com
+      build_dir: out
+      source_repo: block_game_next
+      deploy_repo: wendellavila.github.io
+      deploy_branch: main
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Build Next.js project
+        run: npm run build
+
+      - name: Clone and checkout deployment repo
+        run: |
+          git clone "https://user:$API_GITHUB_TOKEN@github.com/$username/$deploy_repo" deploy_repo
+          cd deploy_repo
+          git config user.name "$username"
+          git config user.email "$email"
+          git checkout "$deploy_branch"
+          cd ..
+
+      - name: Delete old files and move new build to deployment repo folder
+        run: |
+          if [ -d deploy_repo/projects/${{ env.source_repo }} ] ; then
+            rm -rf deploy_repo/projects/${{ env.source_repo }}/*
+          else
+            if [ ! -d deploy_repo/projects ] ; then
+              mkdir deploy_repo/projects
+            fi
+            mkdir deploy_repo/projects/${{ env.source_repo }}
+          fi
+          cp -r ${{ env.build_dir }}/. deploy_repo/projects/${{ env.source_repo }}
+          touch deploy_repo/projects/${{ env.source_repo }}/.nojekyll
+      - name: Commit files to deployment repo
+        run: |
+          cd deploy_repo
+          git add .
+          git commit -m "ci: Automated deployment with GitHub Actions. Source repo: $username/$source_repo"
+          git push origin main
